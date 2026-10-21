@@ -22,6 +22,7 @@ service cloud.firestore {
     match /patients/{studyId} {
       allow list: if isResearcher();
       allow get: if signedIn() && (isResearcher()
+                    || resource == null
                     || resource.data.get('uid', null) == null
                     || resource.data.uid == request.auth.uid);
       allow create, delete: if isResearcher();
