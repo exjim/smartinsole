@@ -5,6 +5,4 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="app.css?v=20261022"></head>
 <body><div id="app"></div>
-<script>/* ?reset=1 로 열면 이 브라우저의 로그인·임시 데이터를 모두 지우고 처음 화면으로 */
-try{if(/[?&]reset=1/.test(location.search)){localStorage.clear();sessionStorage.clear();(indexedDB.databases?indexedDB.databases():Promise.resolve([])).then(function(l){l.forEach(function(d){indexedDB.deleteDatabase(d.name)})}).catch(function(){});history.replaceState(null,'',location.pathname)}}catch(e){}</script>
 <script src="firebase-config.js?v=20261022"></script><script src="db.js?v=20261022"></script><script src="app.js?v=20261022"></script></body></html>

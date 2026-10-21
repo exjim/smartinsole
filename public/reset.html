@@ -1,0 +1,10 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>초기화</title></head>
+<body style="font-family:sans-serif;padding:24px">이 브라우저의 로그인·임시 데이터를 지우는 중…
+<script>
+(async function(){
+ try{localStorage.clear();sessionStorage.clear()}catch(e){}
+ try{if(indexedDB.databases){const l=await indexedDB.databases();await Promise.all(l.map(d=>new Promise(r=>{const q=indexedDB.deleteDatabase(d.name);q.onsuccess=q.onerror=q.onblocked=()=>r()})))}}catch(e){}
+ try{if(window.caches){for(const k of await caches.keys())await caches.delete(k)}}catch(e){}
+ location.replace('./?v='+Date.now());
+})();
+</script></body></html>
