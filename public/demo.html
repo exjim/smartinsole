@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>뉴딕 체험하기</title>
+<meta name="theme-color" content="#0B2A1C">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css?v=20261022">
+<style>
+.pick{min-height:100vh;display:grid;place-items:center;background:#e4ebe6;font-family:'Noto Sans KR',sans-serif;padding:20px}
+.pick .box{width:100%;max-width:380px;background:#0B2A1C;color:#fff;border-radius:28px;padding:32px 24px;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+.pick h1{font-size:1.5rem;margin:0 0 6px}.pick p{color:#b9cfc2;font-size:.9rem;line-height:1.5;margin:0 0 22px}
+.pick a{display:block;background:#7BEF6E;color:#0B2A1C;font-weight:700;text-decoration:none;text-align:center;border-radius:16px;padding:15px;margin-bottom:12px}
+.pick a.alt{background:#173b29;color:#fff}.pick small{display:block;color:#8fb09d;font-size:.78rem;text-align:center;margin-top:14px;line-height:1.5}
+</style></head>
+<body><div id="app"></div>
+<script>
+/* 공개 체험용 진입 페이지.
+   - 로그인 없이 샘플 데이터(NDX-0001~0005)로 앱을 체험합니다.
+   - Firebase는 사용하지 않고 이 브라우저(localStorage)에만 저장하므로 실제 데이터와 무관합니다.
+   - ?role=patient | researcher | admin 으로 해당 역할 화면에 바로 들어갑니다. */
+(function(){
+ window.NEWDIC_FIREBASE=null;
+ window.NEWDIC_RESEARCHER_CODE='NEWDIC-2026';
+ window.NEWDIC_ADMIN_CODE='NEWDIC-ADMIN-2026';
+ var role=new URLSearchParams(location.search).get('role');
+ var D={
+  patient:{uid:'demo-patient',email:'demo.patient@example.com',name:'체험 환자',role:'patient',studyId:'NDX-0001',consent:true,mode:'normal',settings:{vib:true,voice:true,wifi:true}},
+  researcher:{uid:'demo-researcher',email:'demo.researcher@example.com',name:'체험 연구자',role:'researcher',org:'체험'},
+  admin:{uid:'demo-admin',email:'demo.admin@example.com',name:'체험 관리자',role:'admin',org:'체험'}
+ };
+ function load(src){var s=document.createElement('script');s.src=src+'?v=20261022';s.async=false;document.body.appendChild(s)}
+ if(role&&D[role]){
+  try{
+   var users=JSON.parse(localStorage.getItem('nd_users')||'{}');var p=D[role];
+   users[p.uid]=Object.assign({createdAt:Date.now()},users[p.uid]||{},p);
+   localStorage.setItem('nd_users',JSON.stringify(users));
+   sessionStorage.setItem('nd_me',p.uid);
+  }catch(e){}
+  load('db.js');load('app.js');
+ }else{
+  document.getElementById('app').innerHTML='<div class="pick"><div class="box"><h1>뉴딕 체험하기</h1><p>로그인 없이 샘플 데이터로 앱을 둘러볼 수 있어요.</p>'
+   +'<a href="?role=patient">환자 앱으로 보기</a><a class="alt" href="?role=researcher">연구자 웹으로 보기</a><a class="alt" href="?role=admin">관리자 화면으로 보기</a>'
+   +'<small>체험 데이터는 이 브라우저에만 저장되며<br>실제 환자 정보와 연결되지 않습니다.</small></div></div>';
+ }
+})();
+</script>
+</body></html>
