@@ -1,22 +1,33 @@
-# main 브랜치에 push 하면 Firebase(보안 규칙 + 사이트)에 자동 배포됩니다.
+# main 브랜치에 push 하면 Firebase(보안 규칙 + 사이트)에 자동 배포됩니다. (수동 실행도 가능)
 # 사전 설정(GitHub 저장소 Settings > Secrets and variables > Actions):
-#   Secret  FIREBASE_SERVICE_ACCOUNT : Firebase 서비스 계정 키(JSON 전체)
-#   Variable FIREBASE_PROJECT_ID     : Firebase 프로젝트 ID
+#   Secret   FIREBASE_SERVICE_ACCOUNT : Firebase 서비스 계정 키(JSON 전체)
+#   Variable FIREBASE_PROJECT_ID      : Firebase 프로젝트 ID (예: smartinsole-f3069)
+# 위 Secret 이 없으면 배포 단계를 건너뜁니다(실패로 표시되지 않음).
 name: Deploy to Firebase
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
+concurrency: { group: firebase-deploy, cancel-in-progress: true }
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      SA_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 20 }
-      - run: npm i -g firebase-tools
-      - name: Deploy
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+      - name: Check secrets
         run: |
-          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > "$RUNNER_TEMP/sa.json"
+          if [ -z "$SA_JSON" ]; then echo "::warning::FIREBASE_SERVICE_ACCOUNT 시크릿이 없어 Firebase 배포를 건너뜁니다."; fi
+      - uses: actions/checkout@v4
+        if: env.SA_JSON != ''
+      - uses: actions/setup-node@v4
+        if: env.SA_JSON != ''
+        with: { node-version: 20 }
+      - name: Deploy
+        if: env.SA_JSON != ''
+        env:
+          PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID || 'smartinsole-f3069' }}
+        run: |
+          echo "$SA_JSON" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          firebase deploy --only firestore:rules,hosting --project "${{ vars.FIREBASE_PROJECT_ID }}" --non-interactive
+          npx -y firebase-tools@latest deploy --only firestore:rules,hosting --project "$PROJECT_ID" --non-interactive
