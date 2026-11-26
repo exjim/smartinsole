@@ -38,7 +38,19 @@ async function fbInit(cfg){
  const w=async f=>{try{return await f()}catch(e){throw ko(e)}};
  const udoc=id=>F.doc(db,'users',id);
  return {mode:'firebase',
-  signUp:({email,password,name,role,extra})=>w(async()=>{const c=await A.createUserWithEmailAndPassword(auth,email,password);const prof={uid:c.user.uid,email:email.toLowerCase(),name,role,...extra,createdAt:Date.now()};await F.setDoc(udoc(c.user.uid),prof);return prof}),
+  signUp:({email,password,name,role,extra})=>w(async()=>{
+   let c;
+   try{c=await A.createUserWithEmailAndPassword(auth,email,password)}
+   catch(e){ // 이전 가입 시도에서 계정만 만들어지고 프로필 저장이 실패한 경우: 같은 비밀번호면 이어서 프로필을 만든다
+    if(!(e&&e.code==='auth/email-already-in-use'))throw e;
+    try{c=await A.signInWithEmailAndPassword(auth,email,password)}catch{throw e}
+    const ex=await F.getDoc(udoc(c.user.uid));if(ex.exists()){await A.signOut(auth);throw e}}
+   const prof={uid:c.user.uid,email:email.toLowerCase(),name,role,...extra,createdAt:Date.now()};
+   try{await F.setDoc(udoc(c.user.uid),prof)}
+   catch(e){try{await c.user.delete()}catch{}  // 계정만 남아 가입이 꼬이지 않도록 되돌림
+    console.error('프로필 저장 실패',e);
+    throw E('가입 정보를 저장하지 못했습니다. Firestore 데이터베이스·보안 규칙 설정을 확인해 주세요. ('+((e&&e.code)||'unknown')+')')}
+   return prof}),
   signIn:(email,pw)=>w(async()=>{const c=await A.signInWithEmailAndPassword(auth,email,pw);const s=await F.getDoc(udoc(c.user.uid));if(!s.exists())throw E('가입 정보가 없습니다. 다시 가입해 주세요.');return s.data()}),
   signOut:()=>A.signOut(auth),
   restore:()=>new Promise(res=>{const un=A.onAuthStateChanged(auth,async u=>{un();if(!u)return res(null);try{const s=await F.getDoc(udoc(u.uid));res(s.exists()?s.data():null)}catch{res(null)}})}),
